@@ -192,7 +192,9 @@
         }]
     }],
     "images": {
-        "playerImage": "https://i.imgur.com/1VTl2r7.png",
+        "headImage": "https://i.imgur.com/1jkRpM9.png",
+        "tailImage": "https://i.imgur.com/5Htfv5V.png",
+        "foodImage": "https://i.imgur.com/izYY9rZ.png",
         "backgroundImage": "https://i.imgur.com/tmF5WW3.png"
     },
     "metadata": {
@@ -211,9 +213,9 @@
         "backgroundMusic": "https://s3-us-west-2.amazonaws.com/koji-cdn/media/ron/game-music.mp3"
     },
     "style": {
-        "textColor": "purple",
-        "primaryColor": "white",
-        "backgroundColor": "purple",
+        "textColor": "palevioletred",
+        "primaryColor": "palegreen",
+        "backgroundColor": "powderblue",
         "fontFamily": "Audiowide"
     }
 }

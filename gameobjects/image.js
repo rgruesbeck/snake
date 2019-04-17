@@ -18,7 +18,7 @@ class Image {
 
         this.speed = s || 1;
 
-        this.direction = 'right';
+        this.direction = { x: 'left', y: 'up' };
 
         this.bounds = { top: -100, right: this.ctx.canvas.width + 100, bottom: this.ctx.canvas.height + 100, left: -100 };
     }
@@ -35,8 +35,10 @@ class Image {
         if (inBoundsY) { this.setY(dy); }
 
         // set direction
-        if (x < 0) { this.direction = 'right'; }
-        if (x > 0) { this.direction = 'left'; }
+        if (x > 0) { this.direction.x = 'right'; }
+        if (x < 0) { this.direction.x = 'left'; }
+        if (y > 0) { this.direction.y = 'down'; }
+        if (y < 0) { this.direction.y = 'up'; }
     }
 
     setX(x) {
@@ -52,16 +54,25 @@ class Image {
     setBounds(bounds) {
         this.bounds = {
             ...this.bounds,
-            ...bounds
+            ...bounds,
+            ...{
+                right: bounds.right - this.width,
+                bottom: bounds.bottom - this.height
+            }
         }
     }
 
     draw() {
         this.ctx.save();
+        let scaleX = 1;
+        let posX = this.x;
+        let trX = 0;
 
-        let scaleX = this.direction === 'left' ? -1 : 1;
-        let posX = this.direction === 'left' ? -1 * this.x : this.x;
-        let trX = this.direction === 'left' ? this.width : 0;
+        if (this.direction.x === 'right') {
+            scaleX = -1;
+            posX = -1 * this.x;
+            trX = this.width;
+        }
 
         this.ctx.translate(trX, 0);
         this.ctx.scale(scaleX, 1);

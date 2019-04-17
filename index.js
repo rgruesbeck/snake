@@ -13,10 +13,8 @@ import {
     loadFont
 } from './helpers/loaders.js';
 
-import { getSmoother } from './helpers/utils.js'
-
 import Overlay from './helpers/overlay.js';
-import Player from './gamecharacters/player.js';
+import Snake from './gamecharacters/snake.js'
 
 class Game {
 
@@ -27,6 +25,7 @@ class Game {
         this.ctx = canvas.getContext("2d"); // game screen context
         this.canvas.width = window.innerWidth; // set game screen width
         this.canvas.height = window.innerHeight; // set game screen height
+        this.canvas.style.backgroundColor = config.style.backgroundColor;
 
         this.overlay = new Overlay(overlay);
 
@@ -91,7 +90,9 @@ class Game {
         
         // make a list of assets
         const gameAssets = [
-            loadImage('playerImage', this.config.images.playerImage),
+            loadImage('headImage', this.config.images.headImage),
+            loadImage('tailImage', this.config.images.tailImage),
+            loadImage('foodImage', this.config.images.foodImage),
             loadSound('backgroundMusic', this.config.sounds.backgroundMusic),
             loadFont('gameFont', this.config.style.fontFamily)
         ];
@@ -111,21 +112,19 @@ class Game {
 
         // create game characters
         const { scale, centerX, centerY } = this.screen;
-        const { playerImage } = this.images;
+        const { headImage, tailImage, footImage } = this.images;
 
 
-        let playerHeight = 90 * scale;
-        let playerWidth = 90 * scale;
+        let snakeHeight = 40 * scale;
+        let snakeWidth = 40 * scale;
 
-        this.player = new Player(
-            this.ctx, playerImage,
-            centerX - playerWidth / 4, centerY,
-            playerHeight, playerWidth
-        );
-        this.player.setBounds(this.screen)
+        this.snake = new Snake(this.ctx, headImage, tailImage, centerX, centerY, snakeWidth, snakeHeight, 10);
+        this.snake.setBounds(this.screen);
+
 
         // set overlay styles
         this.overlay.setStyles(config.style);
+
 
         this.play();
     }
@@ -153,17 +152,29 @@ class Game {
             this.overlay.setMute(this.state.muted);
             this.overlay.setPause(this.state.paused);
 
+            // development: straight to play
+            this.setState({ current: 'play' });
+            this.overlay.hideBanner();
+            this.overlay.hideButton();
         }
 
         // game play
         if (this.state.current === 'play') {
             if (!this.state.muted) { this.sounds.backgroundMusic.play(); }
 
-            let dy = 10 * Math.cos(this.frame.count/ 60);
-            let dx = 5 * Math.cos(this.frame.count/ 30);
+            const { up, right, down, left } = this.input.keyboard;
 
-            this.player.move(dx, dy, this.frame.scale);
-            this.player.draw();
+            // let dy = 10 * Math.cos(this.frame.count/ 60);
+            // let dx = 5 * Math.cos(this.frame.count/ 30);
+
+            let dy = (up ? -1 : 0) + (down ? 1 : 0);
+            let dx = (left ? -1 : 0) + (right ? 1 : 0);
+
+            this.snake.move(dx, dy, this.frame.scale);
+            this.snake.draw();
+
+            // food
+
         }
 
         // player wins
@@ -208,34 +219,36 @@ class Game {
     }
 
     handleKeyboardInput(type, code) {
+        this.input.active = 'keyboard';
 
         if (type === 'keydown') {
+
             if (code === 'ArrowUp') {
-                this.input.up = true
+                this.input.keyboard.up = true
             }
             if (code === 'ArrowRight') {
-                this.input.right = true
+                this.input.keyboard.right = true
             }
             if (code === 'ArrowDown') {
-                this.input.down = true
+                this.input.keyboard.down = true
             }
             if (code === 'ArrowLeft') {
-                this.input.left = true
+                this.input.keyboard.left = true
             }
         }
 
         if (type === 'keyup') {
             if (code === 'ArrowUp') {
-                this.input.up = false
+                this.input.keyboard.up = false
             }
             if (code === 'ArrowRight') {
-                this.input.right = false
+                this.input.keyboard.right = false
             }
             if (code === 'ArrowDown') {
-                this.input.down = false
+                this.input.keyboard.down = false
             }
             if (code === 'ArrowLeft') {
-                this.input.left = false
+                this.input.keyboard.left = false
             }
 
             // spacebar: pause and play game
@@ -243,6 +256,7 @@ class Game {
                 this.pause();
             }
         }
+
     }
 
     handleResize() {
