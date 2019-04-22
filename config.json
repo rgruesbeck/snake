@@ -214,7 +214,7 @@
     },
     "style": {
         "textColor": "palevioletred",
-        "primaryColor": "palegreen",
+        "primaryColor": "white",
         "backgroundColor": "powderblue",
         "fontFamily": "Audiowide"
     }

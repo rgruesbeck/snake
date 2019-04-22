@@ -18,7 +18,7 @@ class Image {
 
         this.speed = s || 1;
 
-        this.direction = { x: 'left', y: 'up' };
+        this.direction = { current: 'right', x: 'right', y: 'up' };
 
         this.bounds = { top: -100, right: this.ctx.canvas.width + 100, bottom: this.ctx.canvas.height + 100, left: -100 };
     }
@@ -27,39 +27,9 @@ class Image {
         let dx = x === 0 ? this.x : this.x + (x * this.speed * m);
         let dy = y === 0 ? this.y : this.y + (y * this.speed * m);
         
-        // apply bounds
-        let inBoundsX = dx >= this.bounds.left && dx <= this.bounds.right;
-        if (inBoundsX) { this.setX(dx); }
-
-        let inBoundsY = dy >= this.bounds.top && dy <= this.bounds.bottom;
-        if (inBoundsY) { this.setY(dy); }
-
-        // set direction
-        if (x > 0) { this.direction.x = 'right'; }
-        if (x < 0) { this.direction.x = 'left'; }
-        if (y > 0) { this.direction.y = 'down'; }
-        if (y < 0) { this.direction.y = 'up'; }
-    }
-
-    setX(x) {
-        this.x = x;
-        this.cx = this.x + (this.width/2);
-    }
-
-    setY(y) {
-        this.y = y;
-        this.cy = this.y + (this.height/2);
-    }
-
-    setBounds(bounds) {
-        this.bounds = {
-            ...this.bounds,
-            ...bounds,
-            ...{
-                right: bounds.right - this.width,
-                bottom: bounds.bottom - this.height
-            }
-        }
+        this.setX(dx);
+        this.setY(dy);
+        this.setDirection(x, y);
     }
 
     draw() {
@@ -80,6 +50,57 @@ class Image {
         this.ctx.drawImage(this.image, posX, this.y, this.width, this.height);
 
         this.ctx.restore();
+    }
+
+    setDirection(x, y) {
+        // set direction
+        if (x > 0) { this.setDirection('right'); }
+        if (x < 0) { this.setDirection('left'); }
+        if (y > 0) { this.setDirection('down'); }
+        if (y < 0) { this.setDirection('up'); }
+    }
+
+    setX(x) {
+        // apply bounds
+        let inBoundsX = x >= this.bounds.left && x <= this.bounds.right;
+        if (!inBoundsX) { return; }
+
+        // set the new x possition 
+        this.x = x;
+
+        // set the new center y position
+        this.cx = this.x + (this.width/2);
+    }
+
+    setY(y) {
+        // apply y bounds
+        let inBoundsY = y >= this.bounds.top && y <= this.bounds.bottom;
+        if (!inBoundsY) { return; }
+
+        // set the new y possition 
+        this.y = y;
+
+        // set the new center y position
+        this.cy = this.y + (this.height/2);
+    }
+
+    setDirection(direction) {
+        this.direction = {
+            current: direction,
+            x: /right|left/.test(direction) ? direction : this.direction.x,
+            y: /up|down/.test(direction) ? direction : this.direction.y
+        };
+    }
+
+    setBounds(bounds) {
+        this.bounds = {
+            ...this.bounds,
+            ...bounds,
+            ...{
+                right: bounds.right - this.width,
+                bottom: bounds.bottom - this.height
+            }
+        }
     }
 }
 

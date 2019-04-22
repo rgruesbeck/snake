@@ -15,6 +15,7 @@ import {
 
 import Overlay from './helpers/overlay.js';
 import Snake from './gamecharacters/snake.js'
+import Food from './gamecharacters/food.js'
 
 class Game {
 
@@ -27,7 +28,7 @@ class Game {
         this.canvas.height = window.innerHeight; // set game screen height
         this.canvas.style.backgroundColor = config.style.backgroundColor;
 
-        this.overlay = new Overlay(overlay);
+        this.overlay = new Overlay(overlay, config.style);
 
         // frame count and rate
         // just a place to keep track of frame rate (not set it)
@@ -39,10 +40,10 @@ class Game {
 
         // game settings
         this.state = {
-            current: 'ready',
-            prev: 'loading',
+            current: 'loading',
+            prev: '',
             paused: false,
-            muted: true
+            muted: localStorage.getItem('game-muted') === 'true'
         };
 
         this.input = {
@@ -62,12 +63,20 @@ class Game {
             scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
         };
 
+        this.characterSize = Math.floor(25 * this.screen.scale);
+
+        this.grid = {
+            numCols: Math.floor(this.canvas.width / this.characterSize),
+            numRows: Math.floor(this.canvas.height / this.characterSize),
+            cellSize: this.characterSize
+        };
+
         this.images = {}; // place to keep images
         this.sounds = {}; // place to keep sounds
         this.fonts = {}; // place to keep fonts
 
-        this.player = {};
-        this.enemies = {};
+        this.snake = {};
+        this.foodItems = [];
 
         // setup event listeners
         // handle keyboard events
@@ -112,20 +121,19 @@ class Game {
 
         // create game characters
         const { scale, centerX, centerY } = this.screen;
-        const { headImage, tailImage, footImage } = this.images;
+        const { headImage } = this.images;
 
+        let snakeHeight = 25 * scale;
+        let snakeWidth = 25 * scale;
 
-        let snakeHeight = 40 * scale;
-        let snakeWidth = 40 * scale;
+        // get cordinates for center cell
+        let centerCol = Math.floor(this.grid.numCols / 2);
+        let centerRow = Math.floor(this.grid.numRows / 2);
 
-        this.snake = new Snake(this.ctx, headImage, tailImage, centerX, centerY, snakeWidth, snakeHeight, 10);
+        this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid);
         this.snake.setBounds(this.screen);
 
-
-        // set overlay styles
-        this.overlay.setStyles(config.style);
-
-
+        this.setState({ current: 'ready' });
         this.play();
     }
 
@@ -142,9 +150,11 @@ class Game {
 
         // ready to play
         if (this.state.current === 'ready') {
+            this.overlay.hideLoading();
+            this.canvas.style.opacity = 1;
 
-            this.overlay.showBanner('Game');
-            this.overlay.showButton('Play');
+            this.overlay.setBanner('Game');
+            this.overlay.setButton('Play');
             this.overlay.showStats();
             this.overlay.setLives('10');
             this.overlay.setScore('10');
@@ -153,9 +163,13 @@ class Game {
             this.overlay.setPause(this.state.paused);
 
             // development: straight to play
-            this.setState({ current: 'play' });
-            this.overlay.hideBanner();
-            this.overlay.hideButton();
+            // todo: remove 
+            let inDev = true;
+            if (inDev) {
+                this.setState({ current: 'play' });
+                this.overlay.hideBanner();
+                this.overlay.hideButton();
+            }
         }
 
         // game play
@@ -164,16 +178,38 @@ class Game {
 
             const { up, right, down, left } = this.input.keyboard;
 
-            // let dy = 10 * Math.cos(this.frame.count/ 60);
-            // let dx = 5 * Math.cos(this.frame.count/ 30);
-
-            let dy = (up ? -1 : 0) + (down ? 1 : 0);
             let dx = (left ? -1 : 0) + (right ? 1 : 0);
+            let dy = (up ? -1 : 0) + (down ? 1 : 0);
 
             this.snake.move(dx, dy, this.frame.scale);
-            this.snake.draw();
+            this.snake.draw(this.frame);
+
+            // eats food
+            let eatingNow = this.snake.collisionsWith(this.foodItems);
+            if (eatingNow) {
+
+                // snake eats the food
+                this.snake.eat(eatingNow);
+
+                // remove food from foodItems
+                this.foodItems = [ ...this.foodItems]
+                .filter(food => food.id != eatingNow.id)
+
+            }
 
             // food
+            if (this.foodItems.length < 1) {
+                const { scale } = this.screen;
+                const { foodImage } = this.images;
+
+                let foodWidth = 20 * scale;
+                let foodHeight = 20 * scale;
+
+                let newFood = Food.appear(this.ctx, foodImage, foodWidth, foodHeight, this.grid)
+                this.foodItems = [...this.foodItems, newFood];
+            }
+
+            this.foodItems.forEach(f => f.draw(this.frame));
 
         }
 
@@ -188,7 +224,7 @@ class Game {
         }
 
         // paint the next screen
-        this.requestFrame();
+        this.requestFrame(() => this.play());
     }
 
     start() {
@@ -268,7 +304,7 @@ class Game {
         // for koji messages
         // https://gist.github.com/rgruesbeck/174d29f244494ead21e2621f6f0d79ee
 
-        console.log('postmesage');
+        console.log('postmesage', e.data);
     }
 
     // game helpers
@@ -278,18 +314,42 @@ class Game {
         this.overlay.setPause(this.state.paused);
 
         if (this.state.paused) {
+            // pause game loop
             this.cancelFrame();
-            this.overlay.showBanner('Paused');
+
+            // mute all game sounds
+            Object.keys(this.sounds).forEach((key) => {
+                this.sounds[key].muted = true;
+                this.sounds[key].pause();
+            });
+
+            this.overlay.setBanner('Paused');
         } else {
-            this.requestFrame();
+            // resume game loop
+            this.requestFrame(() => this.play(), true);
+
+            // resume game sounds if game not muted
+            if (!this.state.muted) {
+                Object.keys(this.sounds).forEach((key) => {
+                    this.sounds[key].muted = false;
+                    this.sounds.backgroundMusic.play();
+                });
+            }
+
             this.overlay.hideBanner();
         }
     }
 
     // mute game
     mute() {
-        this.state.muted = !this.state.muted; // toggle muted
-        this.overlay.setMute(this.state.muted); // update mute display
+        let key = 'game-muted';
+        localStorage.setItem(
+            key,
+            localStorage.getItem(key) === 'true' ? 'false' : 'true'
+        );
+        this.state.muted = localStorage.getItem(key) === 'true';
+
+        this.overlay.setMute(this.state.muted);
 
         if (this.state.muted) {
             // mute all game sounds
@@ -300,10 +360,13 @@ class Game {
         } else {
             // unmute all game sounds
             // and play background music
-            Object.keys(this.sounds).forEach((key) => {
-                this.sounds[key].muted = false;
-                this.sounds.backgroundMusic.play();
-            });
+            // if game not paused
+            if (!this.state.paused) {
+                Object.keys(this.sounds).forEach((key) => {
+                    this.sounds[key].muted = false;
+                    this.sounds.backgroundMusic.play();
+                });
+            }
         }
     }
 
@@ -322,11 +385,11 @@ class Game {
     }
 
     // request new frame
-    requestFrame() {
+    requestFrame(next, resumed) {
         let now = Date.now();
         this.frame = {
-            count: requestAnimationFrame(() => this.play()),
-            rate: now - this.frame.time,
+            count: requestAnimationFrame(next),
+            rate: resumed ? now : now - this.frame.time,
             time: now,
             scale: this.screen.scale * this.frame.rate * 0.01
         };
@@ -338,7 +401,10 @@ class Game {
     }
 }
 
+document.body.style.backgroundColor = config.style.backgroundColor;
+
 const screen = document.getElementById("game");
 const overlay = document.getElementById("overlay");
+
 const game = new Game(screen, overlay, config); // here we create a fresh game
 game.load(); // and tell it to start
