@@ -12,41 +12,34 @@ class Snake {
         this.x = c * grid.cellSize;
         this.y = r * grid.cellSize;
 
-        this.directions = ['right', 'left', 'up', 'down'];
-        this.direction = { current: 'right', x: 'right', y: 'up' };
+        this.direction = 'right';
 
         this.head = new Image(this.ctx, headImage, this.x, this.y, grid.cellSize, grid.cellSize, 5);
+        this.head.c = c;
+        this.head.r = r;
+
         this.body = [];
 
-        // this.eat(this.tail);
     }
 
     // eat food
-    eat(foodItem, grid) {
-        // position new food item behind
-        // head in the previous cell
-        // head: right -> left 
-        if (this.head.direction.current === 'right') {
-            foodItem.setX(this.head.x - foodItem.width);
-            foodItem.setY(this.head.y);
+    eat(foodItem, g) {
+
+        // set new food item behind head
+        if (this.direction === 'up') {
+            foodItem.setR(this.head.r + 1, g);
         }
 
-        // head: left -> right
-        if (this.head.direction.current === 'left') {
-            foodItem.setX(this.head.x + this.head.width);
-            foodItem.setY(this.head.y);
+        if (this.direction === 'down') {
+            foodItem.setR(this.head.r - 1, g);
         }
 
-        // head: up -> bottom
-        if (this.head.direction.current === 'up') {
-            foodItem.setY(this.head.y + this.head.height);
-            foodItem.setX(this.head.x);
+        if (this.direction === 'right') {
+            foodItem.setC(this.head.c - 1, g);
         }
 
-        // head: down -> top
-        if (this.head.direction.current === 'down') {
-            foodItem.setY(this.head.y - foodItem.height);
-            foodItem.setX(this.head.x);
+        if (this.direction === 'left') {
+            foodItem.setC(this.head.c + 1, g);
         }
 
         // add new food to the body
@@ -54,83 +47,70 @@ class Snake {
             foodItem,
             ...this.body
         ];
-
-        console.log(grid);
-        console.log('body lenth', this.body.length);
     }
 
-    move(dc, dr, m, g) {
-        let nextC = head.c + dc;
-        let nextR = head.r + dr;
+    move(dc, dr, direction, g) {
+        // don't run if head is still moving
+        if (this.head.moving) {
+            return;
+        }
 
-        // first pass, calculate each segments' next position
-        head.nextC = nextC;
-        head.nextR = nextR;
-        for (let i = 1;)
+        // set direction
+        this.direction = direction;
+        this.head.direction = direction;
+
+        // get next cell
+        let nextC = this.head.c + dc;
+        let nextR = this.head.r + dr;
+        let neck = this.body[0];
+
+        // snake can't double back
+        if (neck && nextR === neck.r && nextC === neck.c) {
+            return;
+        }
+
+        // update positions of each segment
+        this.updateBody(g);
+
+        // update cell position
+        this.head.setC(nextC, g);
+        this.head.setR(nextR, g);
     }
 
-    draw() {
-        this.head.draw();
+    draw(frame, grid) {
+        // draw body
         this.body.forEach((segment) => {
+            segment.moveToCell(frame, grid);
             segment.draw();
         })
+
+        // draw head
+        this.head.moveToCell(frame, grid);
+        this.head.draw();
     }
 
-    movex(x, y, m, grid) {
-        // snake cannot move backward
-        let prevDirection = this.direction.current;
-        let newDirection = this.direction.current;
+    updateBody(g) {
+        // get updated cell positions
+        this.body.map((segment, idx, body) => {
+            let leader = body[idx - 1] || this.head;
+            return {
+                col: leader.c,
+                row: leader.r,
+                segment: segment
+            };
+        })
+        .forEach((next, idx) => {
+            // set direction
+            next.segment.direction = this.direction === 'right' ? 'left' : 'right';
 
-        // get valid directions
-        let canMove = this.directions.filter((direction) => {
-            if (prevDirection === 'left') { return direction !== 'right'; }
-            if (prevDirection === 'right') { return direction !== 'left'; }
-            if (prevDirection === 'up') { return direction !== 'down'; }
-            if (prevDirection === 'down') { return direction !== 'up'; }
+            // modify size
+            next.segment.width = g.cellSize - (idx * 1.5);
+            next.segment.height = g.cellSize - (idx * 1.5);
+
+            // set new grid position
+            next.segment.setC(next.col, g);
+            next.segment.setR(next.row, g);
         });
-
-        // get intended direction
-        if (x > 0) { newDirection = 'right'; }
-        if (x < 0) { newDirection = 'left'; }
-        if (y > 0) { newDirection = 'down'; }
-        if (y < 0) { newDirection = 'up'; }
-
-        // console.log(grid);
-
-        if (newDirection && canMove.includes(newDirection)) {
-            // move head to new location
-            this.head.move(x, y, m);
-
-            // move each segment to location of previous segment
-            this.body.forEach((segment, idx, body) => {
-                let leader = body[idx - 1] || this.head;
-
-                // update position
-
-                // leader is right of segment
-                if (leader.x > segment.x) {
-                    segment.setX(leader.x - segment.width);
-                }
-
-                // leader is left of segment
-                if (leader.x < segment.x) {
-                    segment.setX(leader.x + leader.width);
-                }
-
-                // leader is up of segment
-                if (leader.y < segment.y) {
-                    segment.setY(leader.y + leader.height);
-                }
-
-                // leader is down of segment
-                if (leader.y > segment.y) {
-                    segment.setY(leader.y - segment.height);
-                }
-            })
-
-
-            this.setDirection(newDirection);
-        }
     }
 
     setBounds(bounds) {
@@ -151,10 +131,7 @@ class Snake {
     };
 
     collidesWith(entity) {
-        let vx = entity.cx - this.head.cx;
-        let vy = entity.cy - this.head.cy;
-        let distance = Math.sqrt(vx * vx + vy * vy);
-        return distance < (entity.radius + this.head.radius);
+        return entity.c === this.head.c && entity.r === this.head.r;
     }
 
 }

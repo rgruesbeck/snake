@@ -2,8 +2,8 @@
 import Image from '../gameobjects/image';
 
 class Food extends Image {
-    constructor(ctx, image, c, r, w, h, s, grid) {
-        super(ctx, image, c * grid.cellSize, r * grid.cellSize, w, h, s);
+    constructor(ctx, image, c, r, grid) {
+        super(ctx, image, c * grid.cellSize, r * grid.cellSize, grid.cellSize, grid.cellSize, 5);
 
         this.c = c;
         this.r = r;
@@ -21,11 +21,11 @@ class Food extends Image {
     }
     */
 
-    static appear(ctx, image, w, h, grid) {
+    static appear(ctx, image, grid) {
         let randC = Math.floor(Math.random() * grid.numCols);
         let randR = Math.floor(Math.random() * grid.numRows);
 
-        return new Food(ctx, image, randC, randR, w, h, 1, grid);
+        return new Food(ctx, image, randC, randR, grid);
     }
 }
 

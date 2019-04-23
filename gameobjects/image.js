@@ -18,7 +18,9 @@ class Image {
 
         this.speed = s || 1;
 
-        this.direction = { current: 'right', x: 'right', y: 'up' };
+        this.moving = false;
+
+        this.direction = 'right';
 
         this.bounds = { top: -100, right: this.ctx.canvas.width + 100, bottom: this.ctx.canvas.height + 100, left: -100 };
     }
@@ -29,7 +31,42 @@ class Image {
         
         this.setX(dx);
         this.setY(dy);
-        this.setDirection(x, y);
+    }
+
+    moveToCell(frame, grid) {
+        let dx = this.c * grid.cellSize;
+        let dy = this.r * grid.cellSize;
+
+        let m = this.speed * frame.scale;
+        let closeX = Math.abs(dx - this.x) < m;
+        let closeY = Math.abs(dy - this.y) < m;
+
+
+        if (closeX && closeY) {
+            this.moving = false;
+
+            this.setX(dx);
+            this.setY(dy);
+        } else {
+            this.moving = true;
+
+            if (this.x < dx) {
+                this.move(1, 0, frame.scale);
+            }
+
+            if (this.x > dx) {
+                this.move(-1, 0, frame.scale);
+            }
+
+            if (this.y < dy) {
+                this.move(0, 1, frame.scale);
+            }
+
+            if (this.y > dy) {
+                this.move(0, -1, frame.scale);
+            }
+        }
+
     }
 
     draw() {
@@ -38,7 +75,7 @@ class Image {
         let posX = this.x;
         let trX = 0;
 
-        if (this.direction.x === 'right') {
+        if (this.direction === 'right') {
             scaleX = -1;
             posX = -1 * this.x;
             trX = this.width;
@@ -52,16 +89,8 @@ class Image {
         this.ctx.restore();
     }
 
-    setDirection(x, y) {
-        // set direction
-        if (x > 0) { this.setDirection('right'); }
-        if (x < 0) { this.setDirection('left'); }
-        if (y > 0) { this.setDirection('down'); }
-        if (y < 0) { this.setDirection('up'); }
-    }
-
     setX(x) {
-        // apply bounds
+        // apply x bounds
         let inBoundsX = x >= this.bounds.left && x <= this.bounds.right;
         if (!inBoundsX) { return; }
 
@@ -84,12 +113,26 @@ class Image {
         this.cy = this.y + (this.height/2);
     }
 
-    setDirection(direction) {
-        this.direction = {
-            current: direction,
-            x: /right|left/.test(direction) ? direction : this.direction.x,
-            y: /up|down/.test(direction) ? direction : this.direction.y
-        };
+    setC(c, g) {
+        // apply col bounds
+        let inBoundsC = c < g.numCols && c >= 0;
+        if (!inBoundsC) { return; }
+
+        this.c = c;
+
+        // let x = c * g.cellSize;
+        // this.setX(x);
+    }
+
+    setR(r, g) {
+        // apply row bounds
+        let inBoundsR = r < g.numRows && r >= 0;
+        if (!inBoundsR) { return; }
+
+        this.r = r;
+
+        // let y = r * g.cellSize;
+        // this.setY(y);
     }
 
     setBounds(bounds) {

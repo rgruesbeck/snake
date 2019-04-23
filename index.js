@@ -42,6 +42,8 @@ class Game {
         this.state = {
             current: 'loading',
             prev: '',
+            heading: 'right',
+            score: 0,
             paused: false,
             muted: localStorage.getItem('game-muted') === 'true'
         };
@@ -123,15 +125,11 @@ class Game {
         const { scale, centerX, centerY } = this.screen;
         const { headImage } = this.images;
 
-        let snakeHeight = 25 * scale;
-        let snakeWidth = 25 * scale;
-
         // get cordinates for center cell
         let centerCol = Math.floor(this.grid.numCols / 2);
         let centerRow = Math.floor(this.grid.numRows / 2);
 
         this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid);
-        this.snake.setBounds(this.screen);
 
         this.setState({ current: 'ready' });
         this.play();
@@ -156,8 +154,7 @@ class Game {
             this.overlay.setBanner('Game');
             this.overlay.setButton('Play');
             this.overlay.showStats();
-            this.overlay.setLives('10');
-            this.overlay.setScore('10');
+            this.overlay.setScore(this.state.score);
 
             this.overlay.setMute(this.state.muted);
             this.overlay.setPause(this.state.paused);
@@ -176,51 +173,71 @@ class Game {
         if (this.state.current === 'play') {
             if (!this.state.muted) { this.sounds.backgroundMusic.play(); }
 
-            const { up, right, down, left } = this.input.keyboard;
+            this.overlay.setScore(this.state.score);
 
-            let dx = (left ? -1 : 0) + (right ? 1 : 0);
-            let dy = (up ? -1 : 0) + (down ? 1 : 0);
+            let { heading } = this.state;
 
-            this.snake.move(dx, dy, this.frame.scale);
-            this.snake.draw(this.frame);
+            if (heading === 'up') {
+                this.snake.move(0, -1, 'up', this.grid);
+            }
 
-            // eats food
-            let eatingNow = this.snake.collisionsWith(this.foodItems);
-            if (eatingNow) {
+            if (heading === 'down') {
+                this.snake.move(0, 1, 'down', this.grid);
+            }
 
-                // snake eats the food
-                this.snake.eat(eatingNow);
+            if (heading === 'left') {
+                this.snake.move(-1, 0, 'left', this.grid);
+            }
 
-                // remove food from foodItems
+            if (heading === 'right') {
+                this.snake.move(1, 0, 'right', this.grid);
+            }
+
+            this.snake.draw(this.frame, this.grid);
+
+            // snake eats food
+            let eatingFood = this.snake.collisionsWith(this.foodItems);
+            if (eatingFood) {
+
+                // eat the food
+                this.snake.eat(eatingFood, this.grid);
+
+                // remove food from foodItems list
                 this.foodItems = [ ...this.foodItems]
-                .filter(food => food.id != eatingNow.id)
+                .filter(food => food.id != eatingFood.id)
 
+                // increment score
+                this.state.score += 1;
+            }
+
+            // snake eats its self
+            let eatingSelf = this.snake.collisionsWith(this.snake.body);
+            if (eatingSelf) {
+
+                // die or remove life
+                this.setState({ current: 'over' });
             }
 
             // food
             if (this.foodItems.length < 1) {
-                const { scale } = this.screen;
                 const { foodImage } = this.images;
 
-                let foodWidth = 20 * scale;
-                let foodHeight = 20 * scale;
-
-                let newFood = Food.appear(this.ctx, foodImage, foodWidth, foodHeight, this.grid)
+                let newFood = Food.appear(this.ctx, foodImage, this.grid)
                 this.foodItems = [...this.foodItems, newFood];
             }
 
-            this.foodItems.forEach(f => f.draw(this.frame));
+            this.foodItems.forEach(f => f.draw(this.frame, this.grid));
 
         }
 
         // player wins
         if (this.state.current === 'win') {
-
+            this.overlay.setBanner('You Win!');
         }
 
         // game over
         if (this.state.current === 'over') {
-
+            this.overlay.setBanner('Game Over!');
         }
 
         // paint the next screen
@@ -260,16 +277,16 @@ class Game {
         if (type === 'keydown') {
 
             if (code === 'ArrowUp') {
-                this.input.keyboard.up = true
+                this.state.heading = 'up';
             }
             if (code === 'ArrowRight') {
-                this.input.keyboard.right = true
+                this.state.heading = 'right';
             }
             if (code === 'ArrowDown') {
-                this.input.keyboard.down = true
+                this.state.heading = 'down';
             }
             if (code === 'ArrowLeft') {
-                this.input.keyboard.left = true
+                this.state.heading = 'left';
             }
         }
 
