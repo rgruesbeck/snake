@@ -69,7 +69,7 @@ class Game {
             scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
         };
 
-        this.characterSize = Math.floor(25 * this.screen.scale);
+        this.characterSize = this.canvas.width / 3;
 
         this.grid = {
             numCols: Math.floor(this.canvas.width / this.characterSize),
@@ -239,7 +239,8 @@ class Game {
             if (this.foodItems.length < 1) {
                 const { foodImage } = this.images;
 
-                let newFood = Food.appear(this.ctx, foodImage, this.grid)
+                let newLocation = Food.pickLocation(this.grid, this.snake.locations);
+                let newFood = Food.appear(this.ctx, foodImage, newLocation, this.grid);
                 this.foodItems = [...this.foodItems, newFood];
             }
 
@@ -277,6 +278,10 @@ class Game {
         // button
         if ( target.id === 'button') {
             this.setState({ current: 'play' });
+        }
+
+        if (this.state.current === 'over') {
+            this.load();
         }
 
     }
@@ -369,9 +374,11 @@ class Game {
                     console.log('swipes x');
                     if (result.dx > 0) {
                         // swipe right
+                        if (this.state.heading === 'left') { return; }
                         this.state.heading = 'right';
                     } else {
                         // swipe left
+                        if (this.state.heading === 'right') { return; }
                         this.state.heading = 'left';
                     }
                 }
@@ -380,9 +387,11 @@ class Game {
                     console.log('swipes y');
                     if (result.dy > 0) {
                         // swipe down
+                        if (this.state.heading === 'up') { return; }
                         this.state.heading = 'down';
                     } else {
                         // swipe up
+                        if (this.state.heading === 'down') { return; }
                         this.state.heading = 'up';
                     }
                 }

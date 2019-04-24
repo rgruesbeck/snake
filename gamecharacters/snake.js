@@ -116,6 +116,19 @@ class Snake {
             next.segment.setC(next.col, g);
             next.segment.setR(next.row, g);
         });
+
+        // update locations list
+        this.updateLocations();
+    }
+
+    updateLocations() {
+        this.locations = [
+            this.head,
+            ...this.body
+        ].map((loc) => {
+            let id = ''.concat(loc.c, loc.r)
+            return id;
+        });
     }
 
     setBounds(bounds) {

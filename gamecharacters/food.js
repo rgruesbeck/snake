@@ -12,7 +12,7 @@ class Food extends Image {
         this.bounce = (Math.random() * 5) + 5;
     }
 
-    /*
+    /* fancy bouncing animation
     draw() {
         // let dy = 0.5 * Math.cos(count / this.bounce);
 
@@ -21,11 +21,23 @@ class Food extends Image {
     }
     */
 
-    static appear(ctx, image, grid) {
-        let randC = Math.floor(Math.random() * grid.numCols);
-        let randR = Math.floor(Math.random() * grid.numRows);
+    static appear(ctx, image, location, grid) {
+        return new Food(ctx, image, location.c, location.r, grid);
+    }
 
-        return new Food(ctx, image, randC, randR, grid);
+    static pickLocation(grid, invalidLocations) {
+        let location = {
+            c: Math.floor(Math.random() * grid.numCols),
+            r: Math.floor(Math.random() * grid.numRows)
+        };
+
+        let id = ''.concat(location.c, location.r);
+        
+        if (!invalidLocations.includes(id)) {
+            return location;
+        } else {
+            return Food.pickLocation(grid, invalidLocations);
+        }
     }
 }
 
