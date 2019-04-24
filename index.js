@@ -44,6 +44,10 @@ class Game {
             prev: '',
             heading: 'right',
             score: 0,
+            name: config.general.name,
+            startText: config.general.startText,
+            gameoverText: config.general.gameoverText,
+            speed: config.general.speed,
             paused: false,
             muted: localStorage.getItem('game-muted') === 'true'
         };
@@ -102,8 +106,9 @@ class Game {
         // make a list of assets
         const gameAssets = [
             loadImage('headImage', this.config.images.headImage),
-            loadImage('tailImage', this.config.images.tailImage),
             loadImage('foodImage', this.config.images.foodImage),
+            loadSound('dieSound', this.config.sounds.dieSound),
+            loadSound('eatSound', this.config.sounds.eatSound),
             loadSound('backgroundMusic', this.config.sounds.backgroundMusic),
             loadFont('gameFont', this.config.style.fontFamily)
         ];
@@ -129,7 +134,7 @@ class Game {
         let centerCol = Math.floor(this.grid.numCols / 2);
         let centerRow = Math.floor(this.grid.numRows / 2);
 
-        this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid);
+        this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid, this.state.speed);
 
         this.setState({ current: 'ready' });
         this.play();
@@ -151,26 +156,22 @@ class Game {
             this.overlay.hideLoading();
             this.canvas.style.opacity = 1;
 
-            this.overlay.setBanner('Game');
-            this.overlay.setButton('Play');
+            this.overlay.setBanner(this.state.name);
+            this.overlay.setButton(this.state.startText);
             this.overlay.showStats();
             this.overlay.setScore(this.state.score);
 
             this.overlay.setMute(this.state.muted);
             this.overlay.setPause(this.state.paused);
-
-            // development: straight to play
-            // todo: remove 
-            let inDev = true;
-            if (inDev) {
-                this.setState({ current: 'play' });
-                this.overlay.hideBanner();
-                this.overlay.hideButton();
-            }
         }
 
         // game play
         if (this.state.current === 'play') {
+            if (this.state.prev === 'ready') {
+                this.overlay.hideBanner();
+                this.overlay.hideButton();
+            }
+
             if (!this.state.muted) { this.sounds.backgroundMusic.play(); }
 
             this.overlay.setScore(this.state.score);
@@ -198,6 +199,11 @@ class Game {
             // snake eats food
             let eatingFood = this.snake.collisionsWith(this.foodItems);
             if (eatingFood) {
+                // play eat sound
+                if (!this.state.muted) {
+                    this.sounds.eatSound.currentTime = 0;
+                    this.sounds.eatSound.play();
+                }
 
                 // eat the food
                 this.snake.eat(eatingFood, this.grid);
@@ -210,9 +216,15 @@ class Game {
                 this.state.score += 1;
             }
 
-            // snake eats its self
+            // snake eats its self or runs into wall
             let eatingSelf = this.snake.collisionsWith(this.snake.body);
             if (eatingSelf) {
+
+                // stop background musc and play diesound
+                if (!this.state.muted) {
+                    this.sounds.backgroundMusic.pause();
+                    this.sounds.dieSound.play();
+                }
 
                 // die or remove life
                 this.setState({ current: 'over' });
@@ -230,14 +242,9 @@ class Game {
 
         }
 
-        // player wins
-        if (this.state.current === 'win') {
-            this.overlay.setBanner('You Win!');
-        }
-
         // game over
         if (this.state.current === 'over') {
-            this.overlay.setBanner('Game Over!');
+            this.overlay.setBanner(this.state.gameoverText);
         }
 
         // paint the next screen
@@ -265,8 +272,6 @@ class Game {
         // button
         if ( target.id === 'button') {
             this.setState({ current: 'play' });
-            this.overlay.hideBanner();
-            this.overlay.hideButton();
         }
 
     }
@@ -277,39 +282,37 @@ class Game {
         if (type === 'keydown') {
 
             if (code === 'ArrowUp') {
+                if (this.state.heading === 'down') { return; }
                 this.state.heading = 'up';
             }
-            if (code === 'ArrowRight') {
-                this.state.heading = 'right';
-            }
+
             if (code === 'ArrowDown') {
+                if (this.state.heading === 'up') { return; }
                 this.state.heading = 'down';
             }
+
+            if (code === 'ArrowRight') {
+                if (this.state.heading === 'left') { return; }
+                this.state.heading = 'right';
+            }
+
             if (code === 'ArrowLeft') {
+                if (this.state.heading === 'right') { return; }
                 this.state.heading = 'left';
             }
-        }
 
-        if (type === 'keyup') {
-            if (code === 'ArrowUp') {
-                this.input.keyboard.up = false
-            }
-            if (code === 'ArrowRight') {
-                this.input.keyboard.right = false
-            }
-            if (code === 'ArrowDown') {
-                this.input.keyboard.down = false
-            }
-            if (code === 'ArrowLeft') {
-                this.input.keyboard.left = false
-            }
 
-            // spacebar: pause and play game
-            if (code === 'Space') {
-                this.pause();
+            // if in ready state, start game on any keypress
+            if (this.state.current === 'ready') {
+                this.setState({ current: 'play' });
+            } else {
+
+                // spacebar: pause and play game
+                if (code === 'Space') {
+                    this.pause();
+                }
             }
         }
-
     }
 
     handleResize() {

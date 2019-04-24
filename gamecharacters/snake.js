@@ -3,7 +3,7 @@
 import Image from '../gameobjects/image';
 
 class Snake {
-    constructor(ctx, headImage, c, r, grid) {
+    constructor(ctx, headImage, c, r, grid, speed) {
         this.ctx = ctx;
 
         this.c = c;
@@ -14,7 +14,9 @@ class Snake {
 
         this.direction = 'right';
 
-        this.head = new Image(this.ctx, headImage, this.x, this.y, grid.cellSize, grid.cellSize, 5);
+        this.speed = speed;
+
+        this.head = new Image(this.ctx, headImage, this.x, this.y, grid.cellSize, grid.cellSize, this.speed);
         this.head.c = c;
         this.head.r = r;
 
@@ -24,6 +26,8 @@ class Snake {
 
     // eat food
     eat(foodItem, g) {
+        // set speed of foodItem
+        foodItem.speed = this.speed;
 
         // set new food item behind head
         if (this.direction === 'up') {
@@ -44,8 +48,8 @@ class Snake {
 
         // add new food to the body
         this.body = [
-            foodItem,
-            ...this.body
+            ...this.body,
+            foodItem
         ];
     }
 
@@ -104,8 +108,9 @@ class Snake {
             next.segment.direction = this.direction === 'right' ? 'left' : 'right';
 
             // modify size
-            next.segment.width = g.cellSize - (idx * 1.5);
-            next.segment.height = g.cellSize - (idx * 1.5);
+            // todo: minimum size
+            next.segment.width = g.cellSize - (idx * 2);
+            next.segment.height = g.cellSize - (idx * 2);
 
             // set new grid position
             next.segment.setC(next.col, g);

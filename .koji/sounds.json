@@ -1,0 +1,36 @@
+{
+  "sounds": {
+    "dieSound": "https://s3-us-west-2.amazonaws.com/koji-cdn/media/ron/magic1.mp3",
+    "eatSound": "https://s3-us-west-2.amazonaws.com/koji-cdn/media/ron/magic2.mp3",
+    "backgroundMusic": "https://s3-us-west-2.amazonaws.com/koji-cdn/media/ron/game-music.mp3"
+
+  },
+  "@@editor": [
+    {
+      "key": "sounds",
+      "name": "Sounds",
+      "icon": "🔊️",
+      "source": "sounds.json",
+      "fields": [
+        {
+          "key": "dieSound",
+          "name": "Die Sound",
+          "description": "Sound when snake dies",
+          "type": "sound"
+        },
+        {
+          "key": "eatSound",
+          "name": "Eating Sound",
+          "description": "Sound when snake eats food",
+          "type": "sound"
+        },
+        {
+          "key": "backgroundMusic",
+          "name": "Background Music",
+          "description": "Music to loop in background",
+          "type": "sound"
+        }
+      ]
+    }
+  ]
+}

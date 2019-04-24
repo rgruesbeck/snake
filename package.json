@@ -1,19 +1,21 @@
 {
-  "name": "gamecanvas",
+  "name": "snake",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "npm run dev",
-    "dev": "npx parcel index.html",
-    "config": "node config.js",
+    "dev": "npx watch 'node config.js' .koji & npx parcel index.html",
+    "build": "node config.js; npx parcel build index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@material-ui/icons": "^3.0.2",
     "parcel-bundler": "^1.12.3",
+    "watch": "^1.0.2",
     "webfontloader": "^1.6.28"
   }
 }

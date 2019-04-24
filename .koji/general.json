@@ -1,0 +1,34 @@
+{
+  "general": {
+    "name": "Vegan Snake",
+    "startText": "Start",
+    "gameoverText": "Game Over",
+    "speed": "12"
+  },
+  "@@editor": [
+    {
+      "key": "general",
+      "name": "Game settings",
+      "icon": "🎮",
+      "source": "general.json",
+      "fields": [
+        {
+          "key": "name",
+          "name": "App name"
+        },
+        {
+          "key": "startText",
+          "name": "Start Button Text"
+        },
+        {
+          "key": "gameoverText",
+          "name": "Text to show when game over"
+        },
+        {
+          "key": "speed",
+          "name": "Game Speed"
+        }
+      ]
+    }
+  ]
+}
