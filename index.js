@@ -116,6 +116,7 @@ class Game {
         document.body.style.backgroundColor = config.style.backgroundColor;
         this.canvas.style.backgroundColor = config.style.backgroundColor;
         this.overlay.styles = config.style;
+        this.overlay.applyStyles();
         
         // make a list of assets
         const gameAssets = [
