@@ -99,23 +99,24 @@ class Game {
         window.addEventListener('message', (e) => this.handlePostMessage(e), false);
     }
 
+    // load function
     load() {
         // here will load all assets
         // pictures, sounds, and fonts
 
         // set state
         this.setState({
-            name: config.general.name,
-            startText: config.general.startText,
-            gameoverText: config.general.gameoverText,
-            size: config.general.size,
-            speed: config.general.speed
-        })
+            name: this.config.general.name,
+            startText: this.config.general.startText,
+            gameoverText: this.config.general.gameoverText,
+            size: this.config.general.size,
+            speed: this.config.general.speed
+        });
 
         // apply configs
-        document.body.style.backgroundColor = config.style.backgroundColor;
-        this.canvas.style.backgroundColor = config.style.backgroundColor;
-        this.overlay.styles = config.style;
+        document.body.style.backgroundColor = this.config.style.backgroundColor;
+        this.canvas.style.backgroundColor = this.config.style.backgroundColor;
+        this.overlay.styles = this.config.style;
         this.overlay.applyStyles();
         
         // make a list of assets
@@ -139,6 +140,7 @@ class Game {
         .then(() => this.create());
     }
 
+    // create function
     create() {
 
         // create game characters
@@ -154,6 +156,7 @@ class Game {
         this.play();
     }
 
+    // play function
     play() {
         // each time play() is called, update the positions of game character,
         // and paint a picture and then call play() again
@@ -414,7 +417,7 @@ class Game {
     handlePostMessage({ data }) {
         if (data.action === 'injectGlobal') {
             let { scope, key, value } = data.payload;
-            config[scope][key] = value;
+            this.config[scope][key] = value;
             this.load();
         }
     }
