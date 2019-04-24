@@ -398,11 +398,17 @@ class Game {
         document.location.reload();
     }
 
-    handlePostMessage(e) {
-        // for koji messages
-        // https://gist.github.com/rgruesbeck/174d29f244494ead21e2621f6f0d79ee
-
+    handlePostMessage({ data }) {
+        if (data.action === 'injectGlobal') {
+            let { scope, key, value } = data.payload;
+            config[scope][key] = value;
+            this.load();
+        }
         console.log('postmesage', e.data);
+        //  name: config.general.name,
+        //   startText: config.general.startText,
+        //   gameoverText: config.general.gameoverText,
+        //  speed: config.general.speed,
     }
 
     // game helpers
