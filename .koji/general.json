@@ -3,6 +3,7 @@
     "name": "Vegan Snake",
     "startText": "Start",
     "gameoverText": "Game Over",
+    "size": "10",
     "speed": "12"
   },
   "@@editor": [
@@ -23,6 +24,10 @@
         {
           "key": "gameoverText",
           "name": "Text to show when game over"
+        },
+        {
+          "key": "size",
+          "name": "Game Size 0% to 100%"
         },
         {
           "key": "speed",

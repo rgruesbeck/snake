@@ -69,7 +69,7 @@ class Game {
             scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
         };
 
-        this.characterSize = this.canvas.width / 3;
+        this.characterSize = this.canvas.width / (100 / config.general.size);
 
         this.grid = {
             numCols: Math.floor(this.canvas.width / this.characterSize),
@@ -371,7 +371,6 @@ class Game {
                 let swipesY = Math.abs(result.dy) > Math.abs(result.dx);
 
                 if (swipesX) {
-                    console.log('swipes x');
                     if (result.dx > 0) {
                         // swipe right
                         if (this.state.heading === 'left') { return; }
@@ -384,7 +383,6 @@ class Game {
                 }
 
                 if (swipesY) {
-                    console.log('swipes y');
                     if (result.dy > 0) {
                         // swipe down
                         if (this.state.heading === 'up') { return; }
@@ -396,9 +394,6 @@ class Game {
                     }
                 }
             }
-
-
-            console.log(type, result);
         }
     }
 
@@ -413,11 +408,6 @@ class Game {
             config[scope][key] = value;
             this.load();
         }
-        console.log('postmesage', e.data);
-        //  name: config.general.name,
-        //   startText: config.general.startText,
-        //   gameoverText: config.general.gameoverText,
-        //  speed: config.general.speed,
     }
 
     // game helpers
