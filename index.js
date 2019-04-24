@@ -56,7 +56,7 @@ class Game {
             active: 'keyboard',
             keyboard: { up: false, right: false, left: false, down: false },
             mouse: { x: 0, y: 0, click: false },
-            touch: { x: 0, y: 0 },
+            touches: []
         };
 
         this.screen = {
@@ -88,6 +88,11 @@ class Game {
         // handle keyboard events
         document.addEventListener('keydown', ({ code }) => this.handleKeyboardInput('keydown', code), false);
         document.addEventListener('keyup', ({ code }) => this.handleKeyboardInput('keyup', code), false);
+
+        // handle swipes
+        document.addEventListener('touchstart', ({ touches }) => this.handleSwipeInput('touchstart', touches[0]), false);
+        document.addEventListener('touchmove', ({ touches }) => this.handleSwipeInput('touchmove', touches[0]), false);
+        document.addEventListener('touchend', ({ touches }) => this.handleSwipeInput('touchend', touches[0]), false);
 
         // handle overlay clicks
         this.overlay.root.addEventListener('click', ({ target }) => this.handleClicks(target), false);
@@ -312,6 +317,79 @@ class Game {
                     this.pause();
                 }
             }
+        }
+    }
+
+    // convert swipe to a direction
+    handleSwipeInput(type, touch) {
+
+        // clear touch list
+        if (type === 'touchstart') {
+            this.input.touches = [];
+        }
+
+        // add to touch list
+        if (type === 'touchmove') {
+            let { clientX, clientY } = touch;
+            this.input.touches.push({ x: clientX, y: clientY });
+        }
+
+        // get user intention
+        if (type === 'touchend') {
+            let { touches } = this.input;
+            let result = {};
+
+            if (touches.length) {
+
+                // get direction from touches
+                result = this.input.touches
+                .map((touch, idx, arr) => {
+                    // collect diffs
+                    let prev = arr[idx - 1] || arr[0];
+                    return {
+                        x: touch.x,
+                        y: touch.y,
+                        dx: touch.x - prev.x,
+                        dy: touch.y - prev.y
+                    }
+                })
+                .reduce((direction, diff) => {
+                    // sum the diffs
+                    direction.dx += diff.dx;
+                    direction.dy += diff.dy;
+
+                    return direction;
+                });
+
+                // get direction
+                let swipesX = Math.abs(result.dx) > Math.abs(result.dy);
+                let swipesY = Math.abs(result.dy) > Math.abs(result.dx);
+
+                if (swipesX) {
+                    console.log('swipes x');
+                    if (result.dx > 0) {
+                        // swipe right
+                        this.state.heading = 'right';
+                    } else {
+                        // swipe left
+                        this.state.heading = 'left';
+                    }
+                }
+
+                if (swipesY) {
+                    console.log('swipes y');
+                    if (result.dy > 0) {
+                        // swipe down
+                        this.state.heading = 'down';
+                    } else {
+                        // swipe up
+                        this.state.heading = 'up';
+                    }
+                }
+            }
+
+
+            console.log(type, result);
         }
     }
 
