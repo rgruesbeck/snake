@@ -44,10 +44,6 @@ class Game {
             prev: '',
             heading: 'right',
             score: 0,
-            name: config.general.name,
-            startText: config.general.startText,
-            gameoverText: config.general.gameoverText,
-            speed: config.general.speed,
             paused: false,
             muted: localStorage.getItem('game-muted') === 'true'
         };
@@ -107,6 +103,14 @@ class Game {
     load() {
         // here will load all assets
         // pictures, sounds, and fonts
+
+        // set state
+        this.setState({
+            name: config.general.name,
+            startText: config.general.startText,
+            gameoverText: config.general.gameoverText,
+            speed: config.general.speed
+        })
         
         // make a list of assets
         const gameAssets = [
