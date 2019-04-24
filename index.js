@@ -26,7 +26,6 @@ class Game {
         this.ctx = canvas.getContext("2d"); // game screen context
         this.canvas.width = window.innerWidth; // set game screen width
         this.canvas.height = window.innerHeight; // set game screen height
-        this.canvas.style.backgroundColor = config.style.backgroundColor;
 
         this.overlay = new Overlay(overlay, config.style);
 
@@ -109,8 +108,14 @@ class Game {
             name: config.general.name,
             startText: config.general.startText,
             gameoverText: config.general.gameoverText,
+            size: config.general.size,
             speed: config.general.speed
         })
+
+        // apply configs
+        document.body.style.backgroundColor = config.style.backgroundColor;
+        this.canvas.style.backgroundColor = config.style.backgroundColor;
+        this.overlay.styles = config.style;
         
         // make a list of assets
         const gameAssets = [
@@ -136,7 +141,6 @@ class Game {
     create() {
 
         // create game characters
-        const { scale, centerX, centerY } = this.screen;
         const { headImage } = this.images;
 
         // get cordinates for center cell
@@ -507,6 +511,7 @@ class Game {
         cancelAnimationFrame(this.frame.count);
     }
 }
+
 
 document.body.style.backgroundColor = config.style.backgroundColor;
 
