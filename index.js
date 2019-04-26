@@ -270,6 +270,11 @@ class Game {
         // game over
         if (this.state.current === 'over') {
             this.overlay.setBanner(this.state.gameoverText);
+
+            // reset score
+            this.setState({
+                score: 0
+            })
         }
 
         // paint the next screen
