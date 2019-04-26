@@ -109,6 +109,10 @@ class Game {
             name: this.config.general.name,
             startText: this.config.general.startText,
             gameoverText: this.config.general.gameoverText,
+            instructions: {
+                mobile: this.config.general.instructionsMobile,
+                desktop: this.config.general.instructionsDesktop
+            },
             size: this.config.general.size,
             speed: this.config.general.speed
         });
@@ -175,8 +179,10 @@ class Game {
 
             this.overlay.setBanner(this.state.name);
             this.overlay.setButton(this.state.startText);
-            this.overlay.showStats();
+            this.overlay.setInstructions(this.state.instructions);
+
             this.overlay.setScore(this.state.score);
+            this.overlay.showStats();
 
             this.overlay.setMute(this.state.muted);
             this.overlay.setPause(this.state.paused);
@@ -187,6 +193,7 @@ class Game {
             if (this.state.prev === 'ready') {
                 this.overlay.hideBanner();
                 this.overlay.hideButton();
+                this.overlay.hideInstructions();
             }
 
             if (!this.state.muted) { this.sounds.backgroundMusic.play(); }

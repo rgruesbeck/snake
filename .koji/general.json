@@ -3,6 +3,8 @@
     "name": "Vegan Snake",
     "startText": "Start",
     "gameoverText": "Game Over",
+    "instructionsMobile": "Swipe in direction snake should move",
+    "instructionsDesktop": "Use arrow keys to move: [ ⇠ ⇢ ] [ ⇡ ⇣ ]",
     "size": "10",
     "speed": "12"
   },
@@ -24,6 +26,14 @@
         {
           "key": "gameoverText",
           "name": "Text to show when game over"
+        },
+        {
+          "key": "instructionsMobile",
+          "name": "How to play the game on mobile"
+        },
+        {
+          "key": "instructionsDesktop",
+          "name": "How to play the game on desktop"
         },
         {
           "key": "size",
