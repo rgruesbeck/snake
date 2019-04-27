@@ -66,7 +66,7 @@ class Game {
             scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
         };
 
-        this.characterSize = this.canvas.width / (100 / config.general.size);
+        this.characterSize = this.canvas.width / this.config.general.size;
 
         this.grid = {
             numCols: Math.floor(this.canvas.width / this.characterSize),
