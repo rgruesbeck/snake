@@ -13,6 +13,8 @@ import {
     loadFont
 } from './helpers/loaders.js';
 
+import { throttled } from './helpers/utils.js';
+
 import Overlay from './helpers/overlay.js';
 import Snake from './gamecharacters/snake.js'
 import Food from './gamecharacters/food.js'
@@ -80,9 +82,11 @@ class Game {
         this.foodItems = [];
 
         // setup event listeners
+
         // handle keyboard events
-        document.addEventListener('keydown', ({ code }) => this.handleKeyboardInput('keydown', code), false);
-        document.addEventListener('keyup', ({ code }) => this.handleKeyboardInput('keyup', code), false);
+        this.handleKeyboardInputTrottled = throttled(100, (type, code) => this.handleKeyboardInput(type, code)); // create throttled keyboard handler
+        document.addEventListener('keydown', ({ code }) => this.handleKeyboardInputTrottled('keydown', code), false);
+        document.addEventListener('keyup', ({ code }) => this.handleKeyboardInputTrottled('keyup', code), false);
 
         // handle swipes
         document.addEventListener('touchstart', ({ touches }) => this.handleSwipeInput('touchstart', touches[0]), false);
@@ -315,26 +319,26 @@ class Game {
 
         if (type === 'keydown') {
 
-            if (code === 'ArrowUp') {
-                if (this.state.heading === 'down') { return; }
+            let headingDown = this.state.heading === 'down';
+            let headingUp = this.state.heading === 'up';
+            let headingLeft = this.state.heading === 'left';
+            let headingRight = this.state.heading === 'right';
+
+            if (code === 'ArrowUp' && !headingDown) {
                 this.state.heading = 'up';
             }
 
-            if (code === 'ArrowDown') {
-                if (this.state.heading === 'up') { return; }
+            if (code === 'ArrowDown' && !headingUp) {
                 this.state.heading = 'down';
             }
 
-            if (code === 'ArrowRight') {
-                if (this.state.heading === 'left') { return; }
+            if (code === 'ArrowRight' && !headingLeft) {
                 this.state.heading = 'right';
             }
 
-            if (code === 'ArrowLeft') {
-                if (this.state.heading === 'right') { return; }
+            if (code === 'ArrowLeft' && !headingRight) {
                 this.state.heading = 'left';
             }
-
 
             // if in ready state, start game on any keypress
             if (this.state.current === 'ready') {

@@ -108,9 +108,10 @@ class Snake {
             next.segment.direction = this.direction === 'right' ? 'left' : 'right';
 
             // modify size
-            // todo: minimum size
-            next.segment.width = g.cellSize - (idx * 2);
-            next.segment.height = g.cellSize - (idx * 2);
+            let tapper = g.cellSize - (idx + 2) * 2;
+            let minsize = g.cellSize * 0.75;
+            next.segment.width = Math.max(tapper, minsize);
+            next.segment.height = Math.max(tapper, minsize);
 
             // set new grid position
             next.segment.setC(next.col, g);
