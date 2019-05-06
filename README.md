@@ -1,5 +1,5 @@
 # Snake
-![Game Icons](https://i.imgur.com/yaQGKC4.png)
+![Game Icons](https://i.imgur.com/jcBe9Ef.png)
 
 A game based on the arcade classic Snake. A perfect beginner template for new game makers. Jump right into the "index.js" file and begin editing your game settings.
 ## Features: 
