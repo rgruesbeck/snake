@@ -325,6 +325,7 @@ class Game {
     // event listeners
 
     handleClicks(target) {
+        if (this.state.current === 'loading') { return; }
 
         // mute
         if (target.id === 'mute') {
