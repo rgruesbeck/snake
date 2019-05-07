@@ -1,7 +1,7 @@
 {
   "colors": {
-    "textColor": "palevioletred",
-    "primaryColor": "white",
+    "textColor": "#DB7093",
+    "primaryColor": "#BAF2BB",
     "backgroundColor": "powderblue"
   },
   "@@editor": [

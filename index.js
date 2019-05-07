@@ -26,6 +26,7 @@ class Game {
         this.config = config; // customizations
 
         this.topbar = document.getElementById("topBar");
+        this.topbar.style.backgroundColor = this.config.colors.primaryColor;
 
         this.canvas = canvas; // game screen
         this.ctx = canvas.getContext("2d"); // game screen context
