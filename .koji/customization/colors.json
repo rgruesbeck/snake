@@ -1,16 +1,15 @@
 {
-  "style": {
+  "colors": {
     "textColor": "palevioletred",
     "primaryColor": "white",
-    "backgroundColor": "powderblue",
-    "fontFamily": "Grand Hotel"
+    "backgroundColor": "powderblue"
   },
   "@@editor": [
     {
-      "key": "style",
+      "key": "colors",
       "name": "Colors",
       "icon": "💅",
-      "source": "style.json",
+      "source": "colors.json",
       "fields": [
         {
           "key": "textColor",
@@ -21,19 +20,12 @@
         {
           "key": "primaryColor",
           "name": "Primary Color",
-          "description": "Primary Color",
           "type": "color"
         },
         {
           "key": "backgroundColor",
-          "name": "Background Color",
-          "description": "Background Color",
+          "name": "Background color",
           "type": "color"
-        },
-        {
-          "key": "fontFamily",
-          "name": "Font Family",
-          "description": "Google fonts link to font to use on page"
         }
       ]
     }

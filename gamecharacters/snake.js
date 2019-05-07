@@ -3,22 +3,25 @@
 import Image from '../gameobjects/image';
 
 class Snake {
-    constructor(ctx, headImage, c, r, grid, speed) {
+    constructor({ ctx, headImage, col, row, grid, speed, bounds }) {
         this.ctx = ctx;
 
-        this.c = c;
-        this.r = r;
+        this.c = col;
+        this.r = row;
 
-        this.x = c * grid.cellSize;
-        this.y = r * grid.cellSize;
+        this.x = col * grid.cellSize;
+        this.y = row * grid.cellSize;
 
         this.direction = 'right';
 
         this.speed = speed;
 
-        this.head = new Image(this.ctx, headImage, this.x, this.y, grid.cellSize, grid.cellSize, this.speed);
-        this.head.c = c;
-        this.head.r = r;
+        this.bounds = bounds;
+
+        this.head = new Image(this.ctx, headImage, this.x, this.y, grid.cellSize, grid.cellSize, this.speed, bounds);
+
+        this.head.c = col;
+        this.head.r = row;
 
         this.body = [];
 
@@ -51,6 +54,8 @@ class Snake {
             ...this.body,
             foodItem
         ];
+
+        console.log(this.body);
     }
 
     move(dc, dr, direction, g) {

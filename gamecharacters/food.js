@@ -2,14 +2,13 @@
 import Image from '../gameobjects/image';
 
 class Food extends Image {
-    constructor(ctx, image, c, r, grid) {
-        super(ctx, image, c * grid.cellSize, r * grid.cellSize, grid.cellSize, grid.cellSize, 5);
+    constructor({ ctx, image, col, row, grid, bounds }) {
+        super(ctx, image, col * grid.cellSize, row * grid.cellSize, grid.cellSize, grid.cellSize, 5, bounds);
 
-        this.c = c;
-        this.r = r;
+        this.c = col;
+        this.r = row;
 
         this.id = Math.random().toString(16).slice(2);
-        this.bounce = (Math.random() * 5) + 5;
     }
 
     /* fancy bouncing animation
@@ -21,8 +20,15 @@ class Food extends Image {
     }
     */
 
-    static appear(ctx, image, location, grid) {
-        return new Food(ctx, image, location.c, location.r, grid);
+    static appear(ctx, image, location, grid, bounds) {
+        return new Food({
+            ctx,
+            image,
+            col: location.c,
+            row: location.r,
+            grid,
+            bounds
+        });
     }
 
     static pickLocation(grid, invalidLocations) {

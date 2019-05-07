@@ -1,7 +1,7 @@
 // Image base
 
 class Image {
-    constructor(ctx, image, x, y, w, h, s) {
+    constructor(ctx, image, x, y, w, h, s, bounds) {
         this.ctx = ctx;
         this.image = image;
 
@@ -22,7 +22,8 @@ class Image {
 
         this.direction = 'right';
 
-        this.bounds = { top: -100, right: this.ctx.canvas.width + 100, bottom: this.ctx.canvas.height + 100, left: -100 };
+        this.bounds = { top: 0, right: this.ctx.canvas.width, bottom: this.ctx.canvas.height, left: 0 };
+        this.setBounds(bounds);
     }
 
     move(x, y, m) {
@@ -103,8 +104,10 @@ class Image {
 
     setY(y) {
         // apply y bounds
-        let inBoundsY = y >= this.bounds.top && y <= this.bounds.bottom;
-        if (!inBoundsY) { return; }
+        let inBoundsY = y >= this.bounds.top && y <= this.bounds.bottom - this.height;
+        if (!inBoundsY) {
+            return;
+        }
 
         // set the new y possition 
         this.y = y;
@@ -119,9 +122,6 @@ class Image {
         if (!inBoundsC) { return; }
 
         this.c = c;
-
-        // let x = c * g.cellSize;
-        // this.setX(x);
     }
 
     setR(r, g) {
@@ -130,19 +130,12 @@ class Image {
         if (!inBoundsR) { return; }
 
         this.r = r;
-
-        // let y = r * g.cellSize;
-        // this.setY(y);
     }
 
-    setBounds(bounds) {
+    setBounds({ top, right, bottom, left }) {
         this.bounds = {
             ...this.bounds,
-            ...bounds,
-            ...{
-                right: bounds.right - this.width,
-                bottom: bounds.bottom - this.height
-            }
+            ...{ top, right, bottom, left }
         }
     }
 }

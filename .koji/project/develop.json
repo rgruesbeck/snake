@@ -8,7 +8,7 @@
         "building": "node config.js",
         "built": "Built in",
         "build-error": "npm ERR!"
-       },
+      },
       "startCommand": "npm start"
     }
   }

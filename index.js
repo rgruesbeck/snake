@@ -1,5 +1,6 @@
 // Game
-import config from './config.json';
+import Koji from 'koji-tools';
+Koji.pageLoad();
 
 import {
     requestAnimationFrame,
@@ -24,12 +25,14 @@ class Game {
     constructor(canvas, overlay, config) {
         this.config = config; // customizations
 
+        this.topbar = document.getElementById("topBar");
+
         this.canvas = canvas; // game screen
         this.ctx = canvas.getContext("2d"); // game screen context
         this.canvas.width = window.innerWidth; // set game screen width
-        this.canvas.height = window.innerHeight; // set game screen height
+        this.canvas.height = window.innerHeight - this.topbar.clientHeight; // set game screen height
 
-        this.overlay = new Overlay(overlay, config.style);
+        this.overlay = new Overlay(overlay, {...config.colors, ...config.settings});
 
         // frame count and rate
         // just a place to keep track of frame rate (not set it)
@@ -56,23 +59,6 @@ class Game {
             touches: []
         };
 
-        this.screen = {
-            top: 0,
-            bottom: this.canvas.height,
-            left: 0,
-            right: this.canvas.width,
-            centerX: this.canvas.width / 2,
-            centerY: this.canvas.height / 2,
-            scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
-        };
-
-        this.characterSize = this.canvas.width / this.config.general.size;
-
-        this.grid = {
-            numCols: Math.floor(this.canvas.width / this.characterSize),
-            numRows: Math.floor(this.canvas.height / this.characterSize),
-            cellSize: this.characterSize
-        };
 
         this.images = {}; // place to keep images
         this.sounds = {}; // place to keep sounds
@@ -103,29 +89,58 @@ class Game {
         window.addEventListener('message', (e) => this.handlePostMessage(e), false);
     }
 
+    init() {
+        // set configs
+
+        // screen
+        this.screen = {
+            top: 0,
+            bottom: this.canvas.height,
+            left: 0,
+            right: this.canvas.width,
+            centerX: this.canvas.width / 2,
+            centerY: this.canvas.height / 2,
+            scale: ((this.canvas.width + this.canvas.height) / 2) * 0.003
+        };
+
+        // character size
+        this.characterSize = this.canvas.width / this.config.settings.size;
+
+        this.grid = {
+            numCols: Math.floor(this.canvas.width / this.characterSize),
+            numRows: Math.floor(this.canvas.height / this.characterSize),
+            cellSize: this.characterSize
+        };
+
+        // set state
+        this.setState({
+            name: this.config.settings.name,
+            startText: this.config.settings.startText,
+            gameoverText: this.config.settings.gameoverText,
+            instructions: {
+                mobile: this.config.settings.instructionsMobile,
+                desktop: this.config.settings.instructionsDesktop
+            },
+            size: this.config.settings.size,
+            speed: this.config.settings.speed
+        });
+
+        // apply configs
+        this.canvas.style.backgroundColor = this.config.colors.backgroundColor;
+        this.overlay.styles = {...this.config.colors, ...this.config.settings};
+        this.overlay.applyStyles();
+
+        // set background color
+        document.body.style.backgroundColor = this.config.colors.backgroundColor;
+    }
+
     // load function
     load() {
         // here will load all assets
         // pictures, sounds, and fonts
 
-        // set state
-        this.setState({
-            name: this.config.general.name,
-            startText: this.config.general.startText,
-            gameoverText: this.config.general.gameoverText,
-            instructions: {
-                mobile: this.config.general.instructionsMobile,
-                desktop: this.config.general.instructionsDesktop
-            },
-            size: this.config.general.size,
-            speed: this.config.general.speed
-        });
+        this.init(); // apply new configs
 
-        // apply configs
-        document.body.style.backgroundColor = this.config.style.backgroundColor;
-        this.canvas.style.backgroundColor = this.config.style.backgroundColor;
-        this.overlay.styles = this.config.style;
-        this.overlay.applyStyles();
         
         // make a list of assets
         const gameAssets = [
@@ -134,7 +149,7 @@ class Game {
             loadSound('dieSound', this.config.sounds.dieSound),
             loadSound('eatSound', this.config.sounds.eatSound),
             loadSound('backgroundMusic', this.config.sounds.backgroundMusic),
-            loadFont('gameFont', this.config.style.fontFamily)
+            loadFont('gameFont', this.config.settings.fontFamily)
         ];
 
         // put the loaded assets the respective containers
@@ -158,7 +173,16 @@ class Game {
         let centerCol = Math.floor(this.grid.numCols / 2);
         let centerRow = Math.floor(this.grid.numRows / 2);
 
-        this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid, this.state.speed);
+        //this.snake = new Snake(this.ctx, headImage, centerCol, centerRow, this.grid, this.state.speed, this.screen);
+        this.snake = new Snake({
+            ctx: this.ctx,
+            headImage: headImage,
+            col: centerCol,
+            row: centerRow,
+            grid: this.grid,
+            speed: this.state.speed,
+            bounds: this.screen
+        });
 
         this.setState({ current: 'ready' });
         this.play();
@@ -172,6 +196,12 @@ class Game {
 
         // clear the screen of the last picture
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // add bottom border
+        this.ctx.fillStyle = this.config.colors.primaryColor;
+        let bottomBorderX = this.grid.numRows * this.grid.cellSize;
+        this.ctx.fillRect(0, bottomBorderX, this.canvas.width, this.canvas.height - bottomBorderX);
+
 
         // draw and do stuff that you need to do
         // no matter the game state
@@ -263,8 +293,10 @@ class Game {
                 const { foodImage } = this.images;
 
                 let newLocation = Food.pickLocation(this.grid, this.snake.locations);
-                let newFood = Food.appear(this.ctx, foodImage, newLocation, this.grid);
+                let newFood = Food.appear(this.ctx, foodImage, newLocation, this.grid, this.screen);
                 this.foodItems = [...this.foodItems, newFood];
+
+                console.log(this.foodItems);
             }
 
             this.foodItems.forEach(f => f.draw(this.frame, this.grid));
@@ -532,11 +564,9 @@ class Game {
     }
 }
 
-
-document.body.style.backgroundColor = config.style.backgroundColor;
-
 const screen = document.getElementById("game");
 const overlay = document.getElementById("overlay");
 
+const config = Koji.config;
 const game = new Game(screen, overlay, config); // here we create a fresh game
 game.load(); // and tell it to start

@@ -1,9 +1,11 @@
 {
   "metadata": {
-    "title": "game",
-    "description": "game description",
-    "image": "",
-    "icon": "",
+    "title": "Snake",
+    "description": "An Arcade classic. Easily customizable at gokoji.com.",
+    "image": "https://images.koji-cdn.com/template-assets/06f55601-6dac-4e47-9446-5c3199af665f_1556336591760.png",
+    "icon": "https://via.placeholder.com",
+    "icon192": "https://via.placeholder.com/192",
+    "icon512": "https://via.placeholder.com/512",
     "gaCode": ""
   },
   "@@editor": [
@@ -30,7 +32,7 @@
           "description": "Tracking ID for Google Analytics",
           "type": "text",
           "typeOptions": {
-              "monospace": true
+            "monospace": true
           }
         },
         {
@@ -41,9 +43,21 @@
         },
         {
           "key": "icon",
-          "name": "Icon",
+          "name": "Icon 32 x 32",
           "type": "image",
           "description": "Small Icon for your App"
+        },
+        {
+          "key": "icon192",
+          "name": "Icon 192 x 192",
+          "type": "image",
+          "description": "Medium Icon for your App, for PWA loading"
+        },
+        {
+          "key": "icon512",
+          "name": "Icon 512 x 512",
+          "type": "image",
+          "description": "Large Icon for your App, for PWA loading"
         }
       ]
     }
