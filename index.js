@@ -318,10 +318,6 @@ class Game {
         this.requestFrame(() => this.play());
     }
 
-    start() {
-
-    }
-
     // event listeners
 
     handleClicks(target) {

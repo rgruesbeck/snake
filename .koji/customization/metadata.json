@@ -2,10 +2,10 @@
   "metadata": {
     "title": "Snake",
     "description": "An Arcade classic. Easily customizable at gokoji.com.",
-    "image": "https://images.koji-cdn.com/template-assets/06f55601-6dac-4e47-9446-5c3199af665f_1556336591760.png",
-    "icon": "https://via.placeholder.com",
-    "icon192": "https://via.placeholder.com/192",
-    "icon512": "https://via.placeholder.com/512",
+    "image": "https://images.koji-cdn.com/2d41b4ed-e3ae-483d-bab4-4dd1165b615e/610ac0fe5ef14e1aa71a7cf8238dc902.png",
+    "icon": "https://images.koji-cdn.com/2d41b4ed-e3ae-483d-bab4-4dd1165b615e/1c21776390e24c62a78fce642ea82bb7.png",
+    "icon192": "https://images.koji-cdn.com/2d41b4ed-e3ae-483d-bab4-4dd1165b615e/1e2b245ef20f4fbdafce6bef69b2aa79.png?fit=clamp&w=192&h=192",
+    "icon512": "https://images.koji-cdn.com/2d41b4ed-e3ae-483d-bab4-4dd1165b615e/1e2b245ef20f4fbdafce6bef69b2aa79.png?fit=clamp&w=512&h=512",
     "gaCode": ""
   },
   "@@editor": [
