@@ -296,8 +296,6 @@ class Game {
                 let newLocation = Food.pickLocation(this.grid, this.snake.locations);
                 let newFood = Food.appear(this.ctx, foodImage, newLocation, this.grid, this.screen);
                 this.foodItems = [...this.foodItems, newFood];
-
-                console.log(this.foodItems);
             }
 
             this.foodItems.forEach(f => f.draw(this.frame, this.grid));

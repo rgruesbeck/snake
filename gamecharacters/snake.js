@@ -54,8 +54,6 @@ class Snake {
             ...this.body,
             foodItem
         ];
-
-        console.log(this.body);
     }
 
     move(dc, dr, direction, g) {
