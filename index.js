@@ -12,9 +12,13 @@ import {
     loadImage,
     loadSound,
     loadFont
-} from './helpers/loaders.js';
+} from 'game-asset-loader';
 
-import { throttled } from './helpers/utils.js';
+import audioContext from 'audio-context';
+import audioPlayback from 'audio-play';
+import unlockAudioContext from 'unlock-audio-context';
+
+import { throttled, hashCode } from './helpers/utils.js';
 
 import Overlay from './helpers/overlay.js';
 import Snake from './gamecharacters/snake.js'
@@ -25,6 +29,8 @@ class Game {
     constructor(canvas, overlay, config) {
         this.config = config; // customizations
 
+        this.prefix = hashCode(this.config.settings.name); // set prefix for local-storage keys
+
         this.topbar = document.getElementById("topBar");
         this.topbar.style.backgroundColor = this.config.colors.primaryColor;
 
@@ -32,6 +38,10 @@ class Game {
         this.ctx = canvas.getContext("2d"); // game screen context
         this.canvas.width = window.innerWidth; // set game screen width
         this.canvas.height = window.innerHeight - this.topbar.clientHeight; // set game screen height
+
+        this.audioCtx = audioContext(); // create new audio context
+        unlockAudioContext(this.audioCtx);
+        this.playlist = [];
 
         this.overlay = new Overlay(overlay, {...config.colors, ...config.settings});
 
@@ -50,7 +60,7 @@ class Game {
             heading: 'right',
             score: 0,
             paused: false,
-            muted: localStorage.getItem('game-muted') === 'true'
+            muted: localStorage.getItem(this.prefix.concat('muted')) === 'true'
         };
 
         this.input = {
@@ -154,14 +164,17 @@ class Game {
         ];
 
         // put the loaded assets the respective containers
-        loadList(gameAssets)
+        loadList(gameAssets, (progress) => {
+            document.getElementById('loading-progress').textContent = `${progress.percent}%`;
+        })
         .then((assets) => {
 
             this.images = assets.image;
             this.sounds = assets.sound;
 
         })
-        .then(() => this.create());
+        .then(() => this.create())
+        .catch(err => console.error(err));
     }
 
     // create function
@@ -208,7 +221,7 @@ class Game {
         // no matter the game state
 
         // ready to play
-        if (this.state.current === 'ready') {
+        if (this.state.current === 'ready' && this.state.prev === 'loading') {
             this.overlay.hideLoading();
             this.canvas.style.opacity = 1;
 
@@ -221,6 +234,8 @@ class Game {
 
             this.overlay.setMute(this.state.muted);
             this.overlay.setPause(this.state.paused);
+
+            this.setState({ current: 'ready' });
         }
 
         // game play
@@ -231,7 +246,15 @@ class Game {
                 this.overlay.hideInstructions();
             }
 
-            if (!this.state.muted) { this.sounds.backgroundMusic.play(); }
+            if (!this.state.muted && !this.state.backgroundMusic) {
+                let sound = this.sounds.backgroundMusic;
+                this.state.backgroundMusic = audioPlayback(sound, {
+                    start: 0,
+                    end: sound.duration,
+                    loop: true,
+                    context: this.audioCtx
+                });
+            }
 
             this.overlay.setScore(this.state.score);
 
@@ -259,10 +282,7 @@ class Game {
             let eatingFood = this.snake.collisionsWith(this.foodItems);
             if (eatingFood) {
                 // play eat sound
-                if (!this.state.muted) {
-                    this.sounds.eatSound.currentTime = 0;
-                    this.sounds.eatSound.play();
-                }
+                this.playback('eatSound', this.sounds.eatSound);
 
                 // eat the food
                 this.snake.eat(eatingFood, this.grid);
@@ -281,8 +301,8 @@ class Game {
 
                 // stop background musc and play diesound
                 if (!this.state.muted) {
-                    this.sounds.backgroundMusic.pause();
-                    this.sounds.dieSound.play();
+                    this.state.backgroundMusic.pause();
+                    this.playback('dieSound', this.sounds.dieSound);
                 }
 
                 // die or remove life
@@ -469,18 +489,17 @@ class Game {
     // game helpers
     // pause game
     pause() {
+        if (this.state.current != 'play') { return; }
+
         this.state.paused = !this.state.paused;
         this.overlay.setPause(this.state.paused);
 
         if (this.state.paused) {
             // pause game loop
-            this.cancelFrame();
+            this.cancelFrame(this.frame.count - 1);
 
             // mute all game sounds
-            Object.keys(this.sounds).forEach((key) => {
-                this.sounds[key].muted = true;
-                this.sounds[key].pause();
-            });
+            this.audioCtx.suspend();
 
             this.overlay.setBanner('Paused');
         } else {
@@ -488,20 +507,15 @@ class Game {
             this.requestFrame(() => this.play(), true);
 
             // resume game sounds if game not muted
-            if (!this.state.muted) {
-                Object.keys(this.sounds).forEach((key) => {
-                    this.sounds[key].muted = false;
-                    this.sounds.backgroundMusic.play();
-                });
-            }
+            this.audioCtx.resume();
 
-            this.overlay.hideBanner();
+            this.overlay.hide('banner');
         }
     }
 
     // mute game
     mute() {
-        let key = 'game-muted';
+        let key = this.prefix.concat('muted');
         localStorage.setItem(
             key,
             localStorage.getItem(key) === 'true' ? 'false' : 'true'
@@ -512,21 +526,45 @@ class Game {
 
         if (this.state.muted) {
             // mute all game sounds
-            Object.keys(this.sounds).forEach((key) => {
-                this.sounds[key].muted = true;
-                this.sounds[key].pause();
-            });
+            this.audioCtx.suspend();
         } else {
             // unmute all game sounds
-            // and play background music
-            // if game not paused
             if (!this.state.paused) {
-                Object.keys(this.sounds).forEach((key) => {
-                    this.sounds[key].muted = false;
-                    this.sounds.backgroundMusic.play();
-                });
+                this.audioCtx.resume();
             }
         }
+    }
+
+    playback(key, audioBuffer, options = {}) {
+        // add to playlist
+        let id = Math.random().toString(16).slice(2);
+        this.playlist.push({
+            id: id,
+            key: key,
+            playback: audioPlayback(audioBuffer, {
+                ...{
+                    start: 0,
+                    end: audioBuffer.duration,
+                    context: this.audioCtx
+                },
+                ...options
+            }, () => {
+                // remove played sound from playlist
+                this.playlist = this.playlist
+                    .filter(s => s.id != id);
+            })
+        });
+    }
+
+    stopPlayback(key) {
+        this.playlist = this.playlist
+        .filter(s => {
+            let targetBuffer = s.key === key;
+            if (targetBuffer) {
+                s.playback.pause();
+            }
+            return targetBuffer;
+        })
     }
 
     // reset game
